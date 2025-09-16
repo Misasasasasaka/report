@@ -1,0 +1,290 @@
+\documentclass[a4paper,12pt]{ctexart}
+
+\usepackage{geometry}
+\geometry{left=2.5cm,right=2.5cm,top=3cm,bottom=3cm}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{amsmath, amssymb}
+\usepackage{hyperref}
+\usepackage[normalem]{ulem}
+\usepackage{listings}
+
+\newcommand{\uText}[2][3cm]{\uline{\makebox[#1][c]{#2}}}
+
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    citecolor=blue,
+    urlcolor=blue
+}
+
+
+\lstset{
+    basicstyle=\ttfamily\small,
+    numbers=left,
+    numberstyle=\tiny,
+    keywordstyle=\color{blue},
+    commentstyle=\color{gray},
+    stringstyle=\color{red},
+    frame=single,
+    breaklines=true,
+    showstringspaces=false
+}
+
+\begin{document}
+
+\begin{titlepage}
+    \centering
+    \vspace*{3cm}
+    {\Huge\bf 系统开发工具基础实验报告\\[1.5cm]}
+    {\Large\it 实验内容：\uText[4cm]{实验二}\\[0.5cm]}
+    {\Large\it 姓名：\uText[4cm]{张家宜} \quad 学号：\uText[5cm]{20240013045}\\[0.5cm]}
+    {\Large\it 日期：\today\\[1.5cm]}
+    \vfill
+    \normalsize
+    \vspace*{1cm}
+\end{titlepage}
+
+% 目录
+\tableofcontents
+\newpage
+
+
+    
+\section{练习内容}
+
+\subsection{Shell 工具与脚本}
+
+
+\subsubsection{命令与 PATH}
+\begin{lstlisting}
+echo $PATH
+which ls
+\end{lstlisting}
+\texttt{\$PATH} 决定可执行文件的搜索路径 \\ \texttt{which}/\texttt{command -v} 可查看命令解析结果
+
+\subsubsection{目录与导航}
+\begin{lstlisting}
+pwd
+cd ..
+ls -lah
+\end{lstlisting}
+查看当前目录、切换到上级、以更可读方式列目录（含隐藏文件）
+
+\subsubsection{重定向与追加}
+\begin{lstlisting}
+echo "hello" > out.txt
+echo "world" >> out.txt
+cat < out.txt
+\end{lstlisting}
+\texttt{>} 覆盖写入，\texttt{>>} 追加写入，\texttt{<} 将文件作为标准输入
+
+\subsubsection{管道组合}
+\begin{lstlisting}
+ls / | head -n 5
+\end{lstlisting}
+将一个命令的输出作为下一个命令的输入（\texttt{|}）
+
+\subsubsection{通配（globs）}
+\begin{lstlisting}
+echo *.txt
+echo data/??.csv
+\end{lstlisting}
+\texttt{*} 匹配任意串，\texttt{?} 匹配单个字符，\texttt{[abc]} 字符类
+
+\subsubsection{引号与变量展开}
+\begin{lstlisting}
+echo "$HOME"
+echo '$HOME'
+\end{lstlisting}
+双引号会展开变量 \\ 单引号原样输出
+
+\subsubsection{命令替换}
+\begin{lstlisting}
+echo "files: $(ls | wc -l)"
+\end{lstlisting}
+\texttt{\$( ... )} 将子命令输出嵌入当前命令参数
+
+\subsubsection{提权写文件}
+\begin{lstlisting}
+echo 3 | sudo tee /tmp/demo
+\end{lstlisting}
+重定向由 shell 执行 \\ 使用 \texttt{sudo} 时可借助 \texttt{tee}
+
+\subsubsection{find：按名称与类型查找}
+\begin{lstlisting}
+find . -name "*.txt" -type f
+\end{lstlisting}
+在当前目录递归查找普通文件
+
+\subsubsection{find：按时间过滤}
+\begin{lstlisting}
+find . -mtime -1 -type f
+\end{lstlisting}
+筛选最近一天内修改的文件
+
+\subsection{Shell脚本}
+
+\subsubsection{shebang 与可执行权限}
+\begin{lstlisting}
+#!/usr/bin/env bash
+# 保存为 scripts/demo.sh
+# 赋予可执行权限：chmod +x scripts/demo.sh
+# 运行：./scripts/demo.sh foo bar
+
+echo "script path: $0"
+echo "args: $@"
+echo "count: $#"
+\end{lstlisting}
+\texttt{\#!/usr/bin/env bash} 通过 \texttt{PATH} 查找解释器，增强可移植性；\texttt{\$0} 为脚本名，\texttt{\$@} 为全部参数，\texttt{\$#} 为参数个数
+
+\subsubsection{参数校验与循环}
+\begin{lstlisting}
+#!/usr/bin/env bash
+# 统计传入文件的行数；若无参数则给出用法并退出
+
+if [ $# -lt 1 ]; then
+  echo "Usage: $0 FILE..." >&2
+  exit 1
+fi
+
+for f in "$@"; do
+  if [ -f "$f" ]; then
+    wc -l < "$f"
+  else
+    echo "skip: $f (not a file)"
+  fi
+done
+\end{lstlisting}
+用 \texttt{[ ]} 做条件判断，\texttt{-f} 测试普通文件；\texttt{"\$@"} 保留每个参数的整体性；\texttt{exit 1} 表示非零退出码用于指示错误
+
+
+
+\subsection{编辑器(Vim)}
+
+\subsubsection{多模式与保存退出}
+\begin{lstlisting}
+# 正常模式 <ESC>
+# 插入模式 i / a / o / O
+# 命令行模式 :
+:w      " 保存
+:q      " 退出
+:wq     " 保存并退出
+:q!     " 强制退出
+\end{lstlisting}
+
+
+\subsubsection{基本移动}
+\begin{lstlisting}
+h  j  k  l        " 左下上右
+w  b  e           " 以单词为单位前进/后退/到词尾
+0  $              " 行首/行尾
+gg  G             " 文件开头/文件结尾
+\end{lstlisting}
+在正常模式下用 \texttt{hjkl} 移动 \\ \texttt{w/b/e} 按单词移动 \\ \texttt{0/\$} 行首/行尾 \\ \texttt{gg/G} 文件首/尾
+
+\subsubsection{查找与定位}
+\begin{lstlisting}
+/pattern          " 向下搜索
+?pattern          " 向上搜索
+n / N             " 下一个 / 上一个匹配
+* / #             " 以光标下单词为关键词向下/向上搜索
+\end{lstlisting}
+使用正斜杠/问号进行前后向搜索 \\ \texttt{n/N} 在匹配间跳转 \\ \texttt{* / \#} 以当前单词为关键词快速定位
+
+\subsubsection{操作符}
+\begin{lstlisting}
+d{motion}         " 删除到 {motion}
+c{motion}         " 改写到 {motion}
+y{motion} / p     " 复制（yank）/ 粘贴
+u / <C-r>         " 撤销 / 重做
+.                 " 重复上一次修改
+\end{lstlisting}
+\texttt{dw} 删除到下一个词起点，\texttt{cw} 改写该范围 \\ \texttt{.} 可重复上一步修改
+
+\subsubsection{文本对象}
+\begin{lstlisting}
+ci"   ci'   ci(   ci[   " 改写引号/括号内文本
+da"   da'   da(   da[   " 删除“包含定界符”的一段
+\end{lstlisting}
+结合 \texttt{i}/\texttt{a} 与引号、括号等精准作用于文本，如 \texttt{ci"} 与 \texttt{da(}
+
+\subsubsection{可视模式}
+\begin{lstlisting}
+v     V     <C-v>       " 字符 / 行 / 块可视
+y / d / > / <            " 复制 / 删除 / 增加缩进 / 减少缩进
+gu / gU                  " 转小写 / 转大写
+\end{lstlisting}
+进入可视模式选择区域后，可进行复制、删除、缩进与大小写转换等操作
+
+\subsubsection{缩进与格式化}
+\begin{lstlisting}
+>> / <<                " 行级缩进 / 反缩进
+=                      " 对选中区域自动缩进
+gg=G                   " 对全文进行缩进格式化
+\end{lstlisting}
+
+\subsubsection{缓冲区 / 窗口 / 标签页}
+\begin{lstlisting}
+:ls                    " 查看缓冲区
+:b 2                   " 切到编号 2 的缓冲区
+:split  /  :vsplit     " 水平 / 垂直分屏
+:tabnew                " 新建标签页
+:bd                    " 关闭当前缓冲区
+\end{lstlisting}
+通过缓冲区在内存中同时打开多个文件，结合分屏与标签页组织多文件编辑
+
+\subsubsection{宏}
+\begin{lstlisting}
+q a        " 开始录制到寄存器 a
+...        " 执行一系列编辑命令
+q          " 结束录制
+@a         " 回放宏 a
+@@         " 重复上一次回放
+\end{lstlisting}
+把重复性编辑操作录成宏，批量回放以提升效率
+
+\subsubsection{\texttt{\~/.vimrc}}
+\begin{lstlisting}
+" ~/.vimrc
+set number
+set ignorecase smartcase
+set tabstop=2 shiftwidth=2 expandtab
+set hlsearch incsearch
+syntax on
+filetype plugin indent on
+\end{lstlisting}
+开启行号、智能大小写搜索、统一缩进与语法高亮等基础配置
+
+\newpage
+\section{解题感悟}
+
+通过本次实验，我体会到 Shell 在类 Unix（如 Linux）环境下能把零散的任务高效地“拼起来”借助重定向与管道把简单命令按需组合（例如 \texttt{cmd1 | cmd2 | cmd3}），再配合 \texttt{find}/\texttt{grep}（或 \texttt{rg}）等基础工具，就能快速完成查找、过滤、统计等常见工作；把重复流程写成脚本并加入可读的参数与退出码，不仅省时，还提升了可重复性与可维护性。
+
+\vspace{14pt}
+
+Vim 则是在终端环境下非常顺手的文本编辑器：“动词+动作”让移动与修改形成可预测、可组合的操作；文本对象与可视模式能够精确地选中并批量改写结构化内容；\texttt{\~/.vimrc} 配置即可显著改善默认体验，而丰富的插件生态也支持按需扩展（如文件跳转、代码搜索等）。
+
+
+
+
+
+
+\newpage
+
+\begin{thebibliography}{9}
+\bibitem{course-shell} Missing Semester 中文版：课程概览与 shell，\url{https://missing-semester-cn.github.io/2020/course-shell/}
+\bibitem{shell-tools} Missing Semester 中文版：Shell 工具和脚本，\url{https://missing-semester-cn.github.io/2020/shell-tools/}
+\bibitem{editors} Missing Semester 中文版：编辑器（Vim），\url{https://missing-semester-cn.github.io/2020/editors/}
+\end{thebibliography}
+
+
+\section*{GitHub 链接}
+\begin{center}
+\href{https://github.com/Misasasasasaka/report}{https://github.com/Misasasasasaka/report/tree/main/P2}
+\end{center}
+
+\end{document}

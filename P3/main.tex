@@ -1,0 +1,552 @@
+\documentclass[a4paper,12pt]{ctexart}
+
+\usepackage{geometry}
+\geometry{left=2.5cm,right=2.5cm,top=3cm,bottom=3cm}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{amsmath, amssymb}
+\usepackage{hyperref}
+\usepackage[normalem]{ulem}
+\usepackage{listings}
+
+\setlength{\parskip}{0.75em}
+
+\newcommand{\uText}[2][3cm]{\uline{\makebox[#1][c]{#2}}}
+
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    citecolor=blue,
+    urlcolor=blue
+}
+
+\lstset{
+    basicstyle=\ttfamily\small,
+    numbers=left,
+    numberstyle=\tiny,
+    keywordstyle=\color{blue},
+    commentstyle=\color{gray},
+    stringstyle=\color{red},
+    frame=single,
+    breaklines=true,
+    showstringspaces=false
+}
+
+\begin{document}
+
+\begin{titlepage}
+    \centering
+    \vspace*{3cm}
+    {\Huge\bf 系统开发工具基础实验报告\\[1.5cm]}
+    {\Large\it 实验内容：\uText[4cm]{实验三}\\[0.5cm]}
+    {\Large\it 姓名：\uText[4cm]{张家宜} \quad 学号：\uText[5cm]{2024020013045}\\[0.5cm]}
+    {\Large\it 日期：\today\\[1.5cm]}
+    \vfill
+    \normalsize
+    \vspace*{1cm}
+\end{titlepage}
+
+% 目录
+\tableofcontents
+\newpage
+
+    
+\section{练习内容}
+
+\subsection{命令行环境}
+\subsubsection{任务控制}
+输入 Ctrl-C 时，shell 会发送一个 SIGINT 信号到进程
+
+
+输入Ctrl-\textbackslash 可以发送 SIGQUIT 信号
+
+以下是一些SIG信号的说明
+
+\begin{tabular}{|c|c|c|}
+\hline
+编号 & 信号名称 & 作用说明 \\
+\hline
+2  & SIGINT  & Ctrl+C 终止前台进程（可捕获） \\
+\hline
+9  & SIGKILL & 强制杀死进程（不可捕获/忽略） \\
+\hline
+15 & SIGTERM & 默认 kill 发送，要求优雅终止 \\
+\hline
+1  & SIGHUP  & 终端挂起，常用于让守护进程重载配置 \\
+\hline
+3  & SIGQUIT & Ctrl+\ 终止并生成 core dump \\
+\hline
+\end{tabular}
+
+\subsubsection{暂停进程}
+
+键入 Ctrl-Z 会让 shell 发送 SIGTSTP 信号
+
+可以使用 fg 或 bg 命令恢复暂停的工作
+
+jobs 命令会列出当前终端会话中尚未完成的全部任务
+
+\subsubsection{后台执行进程}
+ fg 和 bg 命令分别表示在前台继续和在后台继续
+
+命令中的 \& 后缀可以让命令在直接在后台运行
+
+
+\subsubsection{示例}
+\begin{lstlisting}
+$ sleep 1000
+^Z
+[1]+  Stopped                 sleep 1000
+$ jobs
+[1]+  Stopped                 sleep 1000
+$ bg %1
+[1]+ sleep 1000 &
+$ jobs
+[1]+  Running                 sleep 1000 &
+$ kill -STOP %1
+[1]+  Stopped                 sleep 1000
+$ jobs
+[1]+  Stopped                 sleep 1000
+$ kill -SIGHUP %1
+[1]+  Stopped                 sleep 1000
+$ jobs
+[1]+  Hangup                  sleep 1000
+\end{lstlisting}
+
+\subsubsection{终端多路复用}
+
+\begin{longtable}{|p{2.5cm}|p{5cm}|p{6cm}|}
+\hline
+& \textbf{操作说明} & \textbf{命令} \\
+\hline
+\endfirsthead
+\hline
+\textbf{会话} &
+启动 tmux & \texttt{tmux} \\
+\cline{2-3}
+& 指定名称启动 & \texttt{tmux new -s \emph{NAME}} \\
+\cline{2-3}
+& 列出所有会话 & \texttt{tmux ls} \\
+\cline{2-3}
+& 分离当前会话 & \texttt{<C-b> d} \\
+\cline{2-3}
+& 重新连接最后会话 & \texttt{tmux a} \\
+\cline{2-3}
+& 指定会话连接 & \texttt{tmux a -t \emph{NAME}} \\
+\hline
+
+\textbf{窗口} &
+新建窗口 & \texttt{<C-b> c} \\
+\cline{2-3}
+& 关闭窗口 & \texttt{<C-d>} \\
+\cline{2-3}
+& 跳转到第 N 个窗口 & \texttt{<C-b> N} \\
+\cline{2-3}
+& 切换到前一个窗口 & \texttt{<C-b> p} \\
+\cline{2-3}
+& 切换到下一个窗口 & \texttt{<C-b> n} \\
+\cline{2-3}
+& 重命名当前窗口 & \texttt{<C-b> ,} \\
+\cline{2-3}
+& 列出所有窗口 & \texttt{<C-b> w} \\
+\hline
+
+\textbf{面板} &
+水平分割 & \texttt{<C-b> "} \\
+\cline{2-3}
+& 垂直分割 & \texttt{<C-b> \%} \\
+\cline{2-3}
+& 切换方向 & \texttt{<C-b> <方向键>} \\
+\cline{2-3}
+& 缩放/还原当前面板 & \texttt{<C-b> z} \\
+\cline{2-3}
+& 回卷查看输出（空格选择，回车复制） & \texttt{<C-b> [} \\
+\cline{2-3}
+& 切换面板排布 & \texttt{<C-b> <空格>} \\
+\hline
+\end{longtable}
+
+\subsubsection{别名}
+
+bash 中的别名语法如下：
+\begin{lstlisting}
+alias alias_name="command_to_alias arg1 arg2"
+\end{lstlisting}
+一些示例：
+\begin{lstlisting}
+alias ll="ls -lh"
+
+alias gs="git status"
+alias gc="git commit"
+alias v="vim"
+
+alias sl=ls
+
+alias la="ls -A"
+alias lla="la -l"
+
+# 在忽略某个别名
+\ls
+# 或者禁用别名
+unalias la
+
+# 获取别名的定义
+alias ll
+# 会打印 ll='ls -lh'
+\end{lstlisting}
+
+\subsubsection{配置文件（Dotfiles）}
+对于 bash 来说，在大多数系统下，可以通过编辑 .bashrc 或 .bash\_profile 来进行配置。
+
+\subsubsection{远端设备}
+通过如下命令，可以使用 ssh 连接到其他服务器：
+\begin{lstlisting}
+ssh foo@bar.mit.edu
+\end{lstlisting}
+
+使用 ssh-keygen 命令可以生成一对密钥：
+
+\begin{lstlisting}
+ssh-keygen -o -a 100 -t ed25519 -f ~/.ssh/id_ed25519
+\end{lstlisting}
+
+使用 ~/.ssh/config 可以对ssh进行配置
+
+\begin{lstlisting}
+Host vm
+    User foobar
+    HostName 172.16.174.141
+    Port 2222
+    IdentityFile ~/.ssh/id_ed25519
+    LocalForward 9999 localhost:8888
+
+# 在配置文件中也可以使用通配符
+Host *.mit.edu
+    User foobaz
+\end{lstlisting}
+
+\subsubsection{通过 SSH 复制文件}
+
+\begin{enumerate}
+  \item \textbf{ssh + tee}  
+        通过管道传输标准输入，在远程使用 \texttt{tee} 保存文件。  
+        示例：
+        \begin{lstlisting}
+cat localfile | ssh user@host "tee serverfile"
+        \end{lstlisting}
+
+  \item \textbf{scp}  
+        直接复制文件或目录，支持递归与权限保持。  
+        示例：
+        \begin{lstlisting}
+scp -r local_dir user@host:/path/
+        \end{lstlisting}
+
+  \item \textbf{rsync}  
+        基于差异同步，可断点续传，支持符号链接和权限同步。  
+        示例：
+        \begin{lstlisting}
+rsync -avz --partial localfile user@host:/path/
+        \end{lstlisting}
+\end{enumerate}
+
+
+\subsection{Python入门基础}
+
+\subsubsection{数据类型}
+Python 内置了丰富的数据类型，可分为 不可变类型 和 可变类。  
+
+\noindent 常见分类如下：
+
+\paragraph{数值类型（不可变）}
+\begin{itemize}
+  \item \textbf{int}：整数类型。例如：
+\begin{lstlisting}
+a = 42
+b = -7
+\end{lstlisting}
+  \item \textbf{float}：浮点数。示例：
+\begin{lstlisting}
+pi = 3.14159
+\end{lstlisting}
+  \item \textbf{complex}：复数，形式为 \texttt{a + bj}。
+\begin{lstlisting}
+z = 2 + 3j
+\end{lstlisting}
+\end{itemize}
+
+\paragraph{布尔类型（不可变）}
+\begin{itemize}
+  \item \textbf{bool}：值为 \texttt{True} 或 \texttt{False}。\texttt{True} 等价于 1，\texttt{False} 等价于 0。
+\begin{lstlisting}
+flag = True
+if flag:
+    print("It's True")
+\end{lstlisting}
+\end{itemize}
+
+\paragraph{字符串（不可变）}
+\begin{itemize}
+  \item \textbf{str}：文本数据，可使用单引号或双引号定义。
+\item 支持切片和索引：\texttt{s[0]}, \texttt{s[1:4]}。
+\item 常用方法：\texttt{upper()}、\texttt{lower()}、\texttt{replace()}、\texttt{split()}、\texttt{join()}。
+\begin{lstlisting}
+s = "Hello World"
+print(s.upper())
+print(s[0:5])
+\end{lstlisting}
+\end{itemize}
+
+\paragraph{序列类型}
+\begin{itemize}
+  \item \textbf{list}（可变）：有序集合，可存放不同类型元素。
+\begin{lstlisting}
+nums = [1, 2, 3]
+nums.append(4)
+\end{lstlisting}
+  \item \textbf{tuple}（不可变）：有序且不可修改。
+\begin{lstlisting}
+coords = (10, 20)
+\end{lstlisting}
+  \item \textbf{range}（不可变）：生成整数序列，常与 \texttt{for} 循环搭配。
+\begin{lstlisting}
+for i in range(1, 6):
+    print(i)
+\end{lstlisting}
+\end{itemize}
+
+\paragraph{集合类型}
+\begin{itemize}
+  \item \textbf{set}：无序且元素唯一，可进行集合运算（交集、并集、差集）。
+\begin{lstlisting}
+s1 = {1, 2, 3}
+s2 = {3, 4}
+print(s1 & s2)  # 交集
+\end{lstlisting}
+\end{itemize}
+
+\paragraph{映射类型（可变）}
+\begin{itemize}
+  \item \textbf{dict}：键值对存储，键必须可哈希且唯一。
+\begin{lstlisting}
+person = {"name": "Alice", "age": 20}
+person["age"] = 21  # 修改值
+\end{lstlisting}
+  \item 常用方法：\texttt{keys()}、\texttt{values()}、\texttt{items()}、\texttt{get()}。
+\end{itemize}
+
+\subsubsection{顺序结构}
+Python 程序默认自上而下执行：
+\begin{lstlisting}
+print("第一行")
+print("第二行")
+\end{lstlisting}
+
+\subsubsection{判断结构}
+\begin{lstlisting}
+x = 10
+if x > 0:
+    print("Positive")
+elif x == 0:
+    print("Zero")
+else:
+    print("Negative")
+\end{lstlisting}
+
+\subsubsection{循环结构}
+\begin{lstlisting}
+# for循环
+for i in range(5):
+    print(i)
+
+# while循环
+count = 0
+while count < 5:
+    print(count)
+    count += 1
+\end{lstlisting}
+
+\subsubsection{函数}
+\begin{lstlisting}
+def add(a, b):
+    return a + b
+
+result = add(3, 4)
+print(result)
+\end{lstlisting}
+参数类型包括位置参数、默认参数、关键字参数、可变参数(*args, **kwargs)；  
+支持匿名函数：
+\begin{lstlisting}
+double = lambda x: x * 2
+print(double(5))
+\end{lstlisting}
+
+\subsubsection{运算符与表达式}
+\begin{itemize}
+  \item \textbf{算术运算符}：\texttt{+} 加、\texttt{-} 减、\texttt{*} 乘、\texttt{/} 真除、\texttt{//} 整除、\texttt{\%} 取余、\texttt{**} 幂运算。
+\begin{lstlisting}
+a, b = 7, 3
+print(a + b, a // b, a ** b)
+\end{lstlisting}
+  \item \textbf{比较运算符}：\texttt{==}、\texttt{!=}、\texttt{>}、\texttt{<}、\texttt{>=}、\texttt{<=}。
+  \item \textbf{逻辑运算符}：\texttt{and}、\texttt{or}、\texttt{not}。
+\begin{lstlisting}
+x = 5
+print(x > 0 and x < 10)
+\end{lstlisting}
+  \item \textbf{赋值运算符}：\texttt{=}、\texttt{+=}、\texttt{-=}、\texttt{*=} 等。
+  \item \textbf{成员运算符}：\texttt{in}、\texttt{not in}。
+\begin{lstlisting}
+print(3 in [1,2,3])
+\end{lstlisting}
+  \item \textbf{身份运算符}：\texttt{is}、\texttt{is not} 用于判断对象标识是否相同。
+\end{itemize}
+
+\subsubsection{输入}
+\begin{itemize}
+  \item \textbf{标准输入}：\texttt{input()} 读取字符串，可配合 \texttt{int()} 等函数转换类型。
+\begin{lstlisting}
+name = input("请输入姓名：")
+age = int(input("请输入年龄："))
+\end{lstlisting}
+\end{itemize}
+
+\subsubsection{输出}
+\begin{itemize}
+  \item \textbf{标准输出}：\texttt{print()} 可指定分隔符和结尾字符。
+\begin{lstlisting}
+print("Hello", "World", sep=", ", end="!\n")
+\end{lstlisting}
+  \item \textbf{字符串格式化}：
+\begin{lstlisting}
+print(f"{name} 今年 {age} 岁")
+print("Name: {}, Age: {}".format(name, age))
+\end{lstlisting}
+\end{itemize}
+
+
+\subsubsection{模块与包}
+\begin{itemize}
+  \item \textbf{模块}：每个 \texttt{.py} 文件都是一个模块，可使用 \texttt{import} 导入。
+\begin{lstlisting}
+import math
+print(math.sqrt(16))
+\end{lstlisting}
+  \item \textbf{选择性导入}：
+\begin{lstlisting}
+from math import pi, sin
+print(pi, sin(pi/2))
+\end{lstlisting}
+  \item \textbf{别名导入}：
+\begin{lstlisting}
+import numpy as np
+\end{lstlisting}
+  \item \textbf{自定义模块}：将函数或类写入独立 \texttt{.py} 文件，通过 \texttt{import 文件名} 调用。
+  \item \textbf{包}：含有 \texttt{\_\_init\_\_.py} 文件的文件夹即为包，可包含多个模块形成层次结构。
+\begin{lstlisting}
+from mypackage import mymodule
+\end{lstlisting}
+\end{itemize}
+
+
+\subsection{Python视觉应用}
+
+\subsubsection{图像对比度增强}
+使用 \texttt{PIL.ImageEnhance} 对图像进行对比度增强。
+\begin{lstlisting}
+from PIL import Image, ImageEnhance
+
+img_original = Image.open("a.jpg")
+img_original.show("Original Image")
+
+# 增强对比度，系数 3.8
+img = ImageEnhance.Contrast(img_original)
+img.enhance(3.8).show("Image With More Contrast")
+
+input()
+\end{lstlisting}
+说明：读取原始图片并显示，然后通过设置系数 3.8 将对比度显著提高。
+
+\subsubsection{颜色通道分离}
+利用 \texttt{NumPy} 和 \texttt{PIL} 分离并显示 RGB 三个通道。
+\begin{lstlisting}
+from PIL import Image
+import numpy as np
+
+img = np.array(Image.open('a.jpg'))
+
+# 仅保留红色通道
+img_red = img.copy()
+img_red[:, :, (1, 2)] = 0
+
+# 仅保留绿色通道
+img_green = img.copy()
+img_green[:, :, (0, 2)] = 0
+
+# 仅保留蓝色通道
+img_blue = img.copy()
+img_blue[:, :, (0, 1)] = 0
+
+# 拼接原图与三种单通道图像
+img_ORGB = np.concatenate((img, img_red, img_green, img_blue), axis=1)
+img_converted = Image.fromarray(img_ORGB)
+img_converted.show()
+
+input()
+\end{lstlisting}
+说明：分别提取 R、G、B 三个单独通道，并将它们与原图水平拼接显示。
+
+\subsubsection{图像裁剪与缩放}
+使用 \texttt{OpenCV} 进行裁剪和缩放。
+\begin{lstlisting}
+import cv2
+
+img = cv2.imread("a.jpg")
+
+# 按坐标裁剪图像
+imgCropped = img[150:383, 125:290]
+shape = imgCropped.shape
+print(shape[0])
+
+# 调整尺寸：高度增加 20%，宽度翻倍
+imgCropped = cv2.resize(imgCropped, (shape[0]*12//10, shape[1]*2))
+
+# 显示原图与裁剪后的图
+cv2.imshow("Image cropped", imgCropped)
+cv2.imshow("Image", img)
+cv2.waitKey(0)
+\end{lstlisting}
+说明：从原图中截取指定区域并进行比例缩放，然后在窗口中显示处理结果。
+
+\newpage
+
+\section{解题感悟}
+
+命令行环境里面的方法让我在 shell 里面也可以快捷的控制任务，简化操作，是对上节课的拓展，很实用。
+
+\vspace{14pt}
+
+Python 是当下流行的编程语言，它的语法简单，功能强大，小到日常办公，大到科学研究都可以用到。标准库“开箱即用”，模块与包的组织清晰，配合 \texttt{NumPy} 等科学计算库，用少量且可读性强的代码就能把数据处理、文件批量操作、可视化等任务快速落地，既提高效率也便于后续复用与维护。
+
+\vspace{14pt}
+
+同时，Python 图像处理也让我们可以快速的对图片进行细微的编辑或者大批量编辑，这次用 \texttt{PIL.ImageEnhance} 做对比度增强，用 \texttt{NumPy} 分离与拼接颜色通道，再用 \texttt{OpenCV} 完成裁剪与尺寸调整，把这些步骤写成小脚本后即可一键复现同样的流程，对单张图精细微调与成批处理目录都很方便。
+
+
+\newpage
+
+\begin{thebibliography}{9}
+\bibitem{missing-semester} Missing Semester 中文版，\url{https://missing-semester-cn.github.io/}
+\bibitem{runoob} Python基础教程，\url{https://www.runoob.com/python/python-tutorial.html}
+\bibitem{CSDN} Python视觉应用，\url{https://blog.csdn.net/sgzqc/article/details/124871774}
+\end{thebibliography}
+
+\section*{GitHub 链接}
+\begin{center}
+\href{https://github.com/Misasasasasaka/report/tree/main/P3}{https://github.com/Misasasasasaka/report/tree/main/P3}
+\end{center}
+
+\end{document}
